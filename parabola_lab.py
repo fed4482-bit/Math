@@ -1,104 +1,160 @@
-
-"""
-Parabola Lab - Equazioni e disequazioni di secondo grado
-
-Esegui con:
-    streamlit run parabola_lab.py
-
-Permette di muovere la parabola y = a(x-h)^2 + k
-e osservare:
-- dove interseca l'asse x: soluzioni dell'equazione y = 0;
-- dove sta sopra l'asse x: soluzioni della disequazione y > 0;
-- dove sta sotto l'asse x: soluzioni della disequazione y < 0.
-"""
-
 import numpy as np
 import matplotlib.pyplot as plt
-import streamlit as st
+from ipywidgets import interact, FloatSlider
+from IPython.display import display, Math
 
-st.set_page_config(page_title="Parabola Lab", layout="wide")
+def parabola(a=1, b=24, c=-340):
 
-st.title("Parabola Lab")
-st.subheader("Dal completamento del quadrato alle disequazioni di secondo grado")
+    x = np.linspace(-100, 100, 1000)
+    y = a*x**2 + b*x + c
 
-st.markdown(
-    "Muovi i cursori e osserva come cambiano le soluzioni dell'equazione "
-    "$a(x-h)^2+k=0$ e delle disequazioni associate."
-)
+    display(Math(rf"y = {a:.1f}x^2 + {b:.1f}x + {c:.1f}"))
+    display(Math(rf"{a:.1f}x^2 + {b:.1f}x + {c:.1f}=0"))
 
-col_controls, col_plot = st.columns([1, 2])
+    if abs(a) < 1e-9:
+        print("Con a = 0 non abbiamo una parabola.")
+        return
 
-with col_controls:
-    st.header("Parametri")
-
-    a = st.slider("Apertura a", -3.0, 3.0, 1.0, 0.1)
-    h = st.slider("Spostamento orizzontale h", -20.0, 20.0, -12.0, 0.5)
-    k = st.slider("Spostamento verticale k", -600.0, 600.0, -484.0, 10.0)
-
-    st.markdown("### Parabola")
-    st.latex(r"y = a(x-h)^2+k")
-    st.latex(fr"y = {a:.1f}(x-({h:.1f}))^2+({k:.1f})")
+    delta = b**2 - 4*a*c
+    print(f"Δ = {delta:.2f}")
 
     roots = []
 
-    if abs(a) < 1e-9:
-        st.warning("Con a = 0 non abbiamo una parabola.")
-    else:
-        valore = -k / a
+    if delta > 0:
+        x1 = (-b - np.sqrt(delta))/(2*a)
+        x2 = (-b + np.sqrt(delta))/(2*a)
+        roots = [x1, x2]
 
-        st.markdown("### Equazione")
-        st.latex(r"a(x-h)^2+k=0")
+        print("\nEQUAZIONE")
+        print(f"x₁ = {x1:.2f}")
+        print(f"x₂ = {x2:.2f}")
 
-        if valore < 0:
-            st.write("Nessuna soluzione reale: la parabola non incontra l'asse x.")
-        elif abs(valore) < 1e-9:
-            x0 = h
-            roots = [x0]
-            st.write(f"Una soluzione doppia: x = {x0:.2f}")
+        print("\nDISEQUAZIONE > 0")
+        if a > 0:
+            print(f"x < {x1:.2f} oppure x > {x2:.2f}")
         else:
-            r = np.sqrt(valore)
-            x1 = h - r
-            x2 = h + r
-            roots = [x1, x2]
-            st.write(f"Due soluzioni: x1 = {x1:.2f}, x2 = {x2:.2f}")
+            print(f"{x1:.2f} < x < {x2:.2f}")
 
-        st.markdown("### Differenza chiave")
-        st.write("Equazione: cerca i punti in cui y = 0.")
-        st.write("Disequazione y > 0: cerca gli intervalli in cui la parabola sta sopra l'asse x.")
-        st.write("Disequazione y < 0: cerca gli intervalli in cui la parabola sta sotto l'asse x.")
+        print("\nDISEQUAZIONE < 0")
+        if a > 0:
+            print(f"{x1:.2f} < x < {x2:.2f}")
+        else:
+            print(f"x < {x1:.2f} oppure x > {x2:.2f}")
 
-with col_plot:
-    x = np.linspace(-40, 40, 1000)
-    y = a * (x - h) ** 2 + k
+    elif np.isclose(delta, 0):
+        x0 = -b/(2*a)
+        roots = [x0]
 
-    fig, ax = plt.subplots(figsize=(10, 6))
+        print("\nEQUAZIONE")
+        print(f"Soluzione doppia: x = {x0:.2f}")
 
-    ax.plot(x, y, linewidth=2, label="parabola")
-    ax.axhline(0, linewidth=1)
-    ax.axvline(0, linewidth=1)
+        print("\nDISEQUAZIONI")
+        if a > 0:
+            print(f"{a:.1f}x² + {b:.1f}x + {c:.1f} ≥ 0 per ogni x")
+            print(f"{a:.1f}x² + {b:.1f}x + {c:.1f} > 0 per x ≠ {x0:.2f}")
+        else:
+            print(f"{a:.1f}x² + {b:.1f}x + {c:.1f} ≤ 0 per ogni x")
+            print(f"{a:.1f}x² + {b:.1f}x + {c:.1f} < 0 per x ≠ {x0:.2f}")
 
-    ax.fill_between(x, y, 0, where=(y > 0), alpha=0.18, label="y > 0")
-    ax.fill_between(x, y, 0, where=(y < 0), alpha=0.18, label="y < 0")
+    else:
+        print("\nEQUAZIONE")
+        print("Nessuna soluzione reale")
 
-    ax.scatter([h], [k], s=60)
-    ax.annotate(f"V({h:.1f}, {k:.1f})", (h, k), textcoords="offset points", xytext=(10, 10))
+        print("\nDISEQUAZIONI")
+        if a > 0:
+            print(f"{a:.1f}x² + {b:.1f}x + {c:.1f} > 0 per ogni x")
+            print(f"{a:.1f}x² + {b:.1f}x + {c:.1f} < 0 mai")
+        else:
+            print(f"{a:.1f}x² + {b:.1f}x + {c:.1f} < 0 per ogni x")
+            print(f"{a:.1f}x² + {b:.1f}x + {c:.1f} > 0 mai")
 
-    for root in roots:
-        ax.scatter([root], [0], s=70)
-        ax.annotate(f"x={root:.2f}", (root, 0), textcoords="offset points", xytext=(5, 10))
+    plt.figure(figsize=(9, 6))
 
-    ax.set_xlim(-40, 40)
-    ax.set_ylim(-600, 600)
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_title("Parabola, equazione e disequazioni")
-    ax.grid(True, alpha=0.3)
-    ax.legend()
+    plt.plot(x, y, linewidth=3, label="parabola")
+    plt.axhline(0, linewidth=1)
+    plt.axvline(0, linewidth=1)
 
-    st.pyplot(fig)
+    plt.fill_between(x, y, 0, where=(y > 0), alpha=0.2, label="y > 0")
+    plt.fill_between(x, y, 0, where=(y < 0), alpha=0.2, label="y < 0")
 
-st.markdown("---")
-st.markdown(
-    "Esempio dal laboratorio con i cartoncini: "
-    "$x^2+24x=340 \\Rightarrow x^2+24x-340=0 \\Rightarrow (x+12)^2-484=0$."
-)
+    xv = -b/(2*a)
+    yv = a*xv**2 + b*xv + c
+
+    plt.scatter([xv], [yv], s=100)
+    plt.annotate(
+        f"V({xv:.2f}, {yv:.2f})",
+        (xv, yv),
+        xytext=(10, 10),
+        textcoords="offset points"
+    )
+
+    if len(roots) == 2:
+        x1, x2 = roots
+
+        plt.scatter([x1, x2], [0, 0], s=120)
+        plt.axvline(x1, linestyle="--", linewidth=1)
+        plt.axvline(x2, linestyle="--", linewidth=1)
+
+        plt.annotate(
+            f"x₁ = {x1:.2f}",
+            (x1, 0),
+            xytext=(0, 15),
+            textcoords="offset points",
+            ha="center"
+        )
+
+        plt.annotate(
+            f"x₂ = {x2:.2f}",
+            (x2, 0),
+            xytext=(0, 15),
+            textcoords="offset points",
+            ha="center"
+        )
+
+        plt.text(
+            0.02,
+            0.98,
+            f"x₁ = {x1:.2f}\nx₂ = {x2:.2f}",
+            transform=plt.gca().transAxes,
+            verticalalignment="top",
+            bbox=dict(boxstyle="round")
+        )
+
+    elif len(roots) == 1:
+        x0 = roots[0]
+
+        plt.scatter([x0], [0], s=120)
+        plt.axvline(x0, linestyle="--", linewidth=1)
+
+        plt.annotate(
+            f"x = {x0:.2f}",
+            (x0, 0),
+            xytext=(0, 15),
+            textcoords="offset points",
+            ha="center"
+        )
+
+        plt.text(
+            0.02,
+            0.98,
+            f"x = {x0:.2f}",
+            transform=plt.gca().transAxes,
+            verticalalignment="top",
+            bbox=dict(boxstyle="round")
+        )
+
+    plt.xlim(-100, 100)
+    plt.ylim(-1000, 1000)
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.title("Parabola, equazione e disequazioni")
+    plt.grid(True)
+    plt.legend()
+    plt.show()
+
+interact(
+    parabola,
+    a=FloatSlider(min=-3, max=3, step=0.1, value=1),
+    b=FloatSlider(min=-100, max=100, step=1, value=24),
+    c=FloatSlider(min=-1000, max=1000, step=10, value=-340)
+);
