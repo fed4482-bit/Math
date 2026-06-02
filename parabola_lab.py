@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from ipywidgets import interact, FloatSlider
-from IPython.display import display, Math
+
 
 def parabola(a=1, b=24, c=-340):
 
